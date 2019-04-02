@@ -75,11 +75,19 @@ namespace FishDex
 		{
 			if (Game1.activeClickableMenu is FishMenu)
 				this.HideFishMenu();
+			else if (Game1.activeClickableMenu != null)
+			{
+				this.Monitor.Log($"Another menu is already open", LogLevel.Info);
+				return;
+			}
 			else
 			{
 				this.Monitor.InterceptErrors("opening fish menu", () =>
 				{
 					this.Monitor.Log($"Opening fish menu", LogLevel.Trace);
+
+					FishMenu fishMenu = new FishMenu(this.Monitor, this.Helper.Reflection, this.Config.ScrollAmount);
+					Game1.activeClickableMenu = fishMenu;
 				});
 			}
 		}

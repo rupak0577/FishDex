@@ -43,7 +43,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components\FishMenu.cs" />
+    <Compile Include="Helpers\DrawHelper.cs" />
     <Compile Include="Helpers\ErrorHandler.cs" />
+    <Compile Include="Framework\FormattedText.cs" />
+    <Compile Include="Framework\IFormattedText.cs" />
+    <Compile Include="SpriteInfo.cs" />
+    <Compile Include="Components\Sprites.cs" />
+    <Compile Include="Helpers\UIHelper.cs" />
     <Compile Include="ModConfig.cs" />
     <Compile Include="ModEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

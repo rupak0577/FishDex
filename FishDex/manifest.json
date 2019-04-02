@@ -1,0 +1,10 @@
+﻿{
+  "Name": "FishDex",
+  "Author": "rDtenth",
+  "Version": "1.0.0",
+  "Description": "Records data of fish caught",
+  "UniqueID": "rDtenth.FishDex",
+  "EntryDll": "FishDex.dll",
+  "MinimumApiVersion": "2.10.0",
+  "UpdateKeys": []
+}

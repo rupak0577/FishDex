@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Components\FishMenu.cs" />
+    <Compile Include="DataParser.cs" />
     <Compile Include="Helpers\DrawHelper.cs" />
     <Compile Include="Helpers\ErrorHandler.cs" />
     <Compile Include="Framework\FormattedText.cs" />

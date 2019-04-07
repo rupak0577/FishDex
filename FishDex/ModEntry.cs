@@ -14,6 +14,9 @@ namespace FishDex
 		/*********
 		** Fields
 		*********/
+		/// <summary>The data parser helper class.</summary>
+		private DataParser Parser;
+
 		/****
         ** Configuration
         ****/
@@ -32,6 +35,7 @@ namespace FishDex
 
 			// hook up events
 			helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
+			helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
 			helper.Events.Input.ButtonPressed += this.OnButtonPressed;
 		}
 
@@ -47,6 +51,15 @@ namespace FishDex
 		private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
 		{
 			// initialise functionality
+			this.Parser = new DataParser();
+		}
+
+		/// <summary>The method invoked when a save is loaded.</summary>
+		/// <param name="sender">The event sender.</param>
+		/// <param name="e">The event data.</param>
+		private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
+		{
+			this.Parser.SetCaughtData();
 		}
 
 		/// <summary>The method invoked when the player presses a button.</summary>
@@ -86,7 +99,7 @@ namespace FishDex
 				{
 					this.Monitor.Log($"Opening fish menu", LogLevel.Trace);
 
-					FishMenu fishMenu = new FishMenu(this.Monitor, this.Helper.Reflection, this.Config.ScrollAmount);
+					FishMenu fishMenu = new FishMenu(this.Parser, this.Monitor, this.Helper.Reflection, this.Config.ScrollAmount);
 					Game1.activeClickableMenu = fishMenu;
 				});
 			}

@@ -6,6 +6,10 @@ using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Menus;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using static FishDex.DataParser;
+using SObject = StardewValley.Object;
 
 namespace FishDex.Components
 {
@@ -15,6 +19,9 @@ namespace FishDex.Components
 		/*********
         ** Fields
         *********/
+
+		private readonly IEnumerable<FishInfo> Fishes;
+
 		/// <summary>Encapsulates logging and monitoring.</summary>
 		private readonly IMonitor Monitor;
 
@@ -50,13 +57,14 @@ namespace FishDex.Components
         ** Constructors
         ****/
 		/// <summary>Construct an instance.</summary>
-		/// <param name="gameHelper">Provides utility methods for interacting with the game code.</param>
+		/// <param name="parser">Provides access to parsed fish data.</param>
 		/// <param name="monitor">Encapsulates logging and monitoring.</param>
 		/// <param name="reflectionHelper">Simplifies access to private game code.</param>
 		/// <param name="scroll">The amount to scroll long content on each up/down scroll.</param>
-		public FishMenu(IMonitor monitor, IReflectionHelper reflectionHelper, int scroll)
+		public FishMenu(DataParser parser, IMonitor monitor, IReflectionHelper reflectionHelper, int scroll)
 		{
 			// save data
+			this.Fishes = parser.GetFishData();
 			this.Monitor = monitor;
 			this.Reflection = reflectionHelper;
 			this.ScrollAmount = scroll;
@@ -214,60 +222,66 @@ namespace FishDex.Components
 						this.CurrentScroll = Math.Min(this.MaxScroll, this.CurrentScroll); // don't scroll past bottom
 						topOffset -= this.CurrentScroll; // scrolled down == move text up
 
-						//// draw portrait
-						//if (subject.DrawPortrait(contentBatch, new Vector2(x + leftOffset, y + topOffset), new Vector2(70, 70)))
-						//	leftOffset += 72;
+						leftOffset += 72;
+						float wrapWidth = this.width - leftOffset - gutter;
 
-						//// draw fields
-						//float wrapWidth = this.width - leftOffset - gutter;
-						//{
-						//	// draw name & item type
-						//	{
-						//		Vector2 nameSize = contentBatch.DrawTextBlock(font, $"{subject.Name}.", new Vector2(x + leftOffset, y + topOffset), wrapWidth, bold: Constant.AllowBold);
-						//		Vector2 typeSize = contentBatch.DrawTextBlock(font, $"{subject.Type}.", new Vector2(x + leftOffset + nameSize.X + spaceWidth, y + topOffset), wrapWidth);
-						//		topOffset += Math.Max(nameSize.Y, typeSize.Y);
-						//	}
+						{
+							int caught = 0;
+							foreach (var fish in this.Fishes)
+							{
+								if (fish.Caught)
+									caught++;
+							}
 
-						//	// draw spacer
-						//	topOffset += lineHeight;
+							Vector2 caughtLabelSize = contentBatch.DrawTextBlock(font, $"Caught : ", new Vector2(x + leftOffset, y + topOffset), wrapWidth);
+							Vector2 caughtValueSize = contentBatch.DrawTextBlock(font, $"{caught}/{this.Fishes.Count()}", new Vector2(x + leftOffset + caughtLabelSize.X, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+							topOffset += lineHeight * 4;
+						}
 
-						//	// draw custom fields
-						//	if (this.Fields.Any())
-						//	{
-						//		ICustomField[] fields = this.Fields;
-						//		float cellPadding = 3;
-						//		float labelWidth = fields.Where(p => p.HasValue).Max(p => font.MeasureString(p.Label).X);
-						//		float valueWidth = wrapWidth - labelWidth - cellPadding * 4 - tableBorderWidth;
-						//		foreach (ICustomField field in fields)
-						//		{
-						//			if (!field.HasValue)
-						//				continue;
+						// draw fish info
+						foreach (FishInfo fish in this.Fishes)
+						{
+							// draw sprite
+							{
+								Item item = new SObject(fish.Id, 1);
+								item.drawInMenu(contentBatch, new Vector2(x + leftOffset, y + topOffset), 1f, 1f, 1f, false, fish.Caught ? Color.White : Color.Black * 0.2f, false);
+								topOffset += Game1.tileSize / 2 + spaceWidth;
+							}
 
-						//			// draw label & value
-						//			Vector2 labelSize = contentBatch.DrawTextBlock(font, field.Label, new Vector2(x + leftOffset + cellPadding, y + topOffset + cellPadding), wrapWidth);
-						//			Vector2 valuePosition = new Vector2(x + leftOffset + labelWidth + cellPadding * 3, y + topOffset + cellPadding);
-						//			Vector2 valueSize =
-						//				field.DrawValue(contentBatch, font, valuePosition, valueWidth)
-						//				?? contentBatch.DrawTextBlock(font, field.Value, valuePosition, valueWidth);
-						//			Vector2 rowSize = new Vector2(labelWidth + valueWidth + cellPadding * 4, Math.Max(labelSize.Y, valueSize.Y));
+							// draw name
+							{
+								Vector2 nameSize = contentBatch.DrawTextBlock(font, $"{(fish.Caught? fish.Name : "???")}", new Vector2(x + leftOffset + Game1.tileSize + spaceWidth, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+								topOffset += Game1.tileSize / 2 + spaceWidth;
+							}
 
-						//			// draw table row
-						//			Color lineColor = Color.Gray;
-						//			contentBatch.DrawLine(x + leftOffset, y + topOffset, new Vector2(rowSize.X, tableBorderWidth), lineColor); // top
-						//			contentBatch.DrawLine(x + leftOffset, y + topOffset + rowSize.Y, new Vector2(rowSize.X, tableBorderWidth), lineColor); // bottom
-						//			contentBatch.DrawLine(x + leftOffset, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // left
-						//			contentBatch.DrawLine(x + leftOffset + labelWidth + cellPadding * 2, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // middle
-						//			contentBatch.DrawLine(x + leftOffset + rowSize.X, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // right
+							// draw table
+							foreach (string key in fish.Data.Keys)
+							{
+								float cellPadding = 3;
+								float labelWidth = fish.Data.Keys.Max(p => font.MeasureString(p).X);
+								float valueWidth = wrapWidth - labelWidth - cellPadding * 4 - tableBorderWidth;
 
-						//			// track link area
-						//			if (field is ILinkField linkField)
-						//				this.LinkFieldAreas[linkField] = new Rectangle((int)valuePosition.X, (int)valuePosition.Y, (int)valueSize.X, (int)valueSize.Y);
+								// draw label & value
+								Vector2 labelSize = contentBatch.DrawTextBlock(font, key, new Vector2(x + leftOffset + cellPadding, y + topOffset + cellPadding), wrapWidth);
+								Vector2 valuePosition = new Vector2(x + leftOffset + labelWidth + cellPadding * 3, y + topOffset + cellPadding);
+								Vector2 valueSize = contentBatch.DrawTextBlock(font, fish.Caught? fish.Data[key] : "???", valuePosition, valueWidth);
+								Vector2 rowSize = new Vector2(labelWidth + valueWidth + cellPadding * 4, Math.Max(labelSize.Y, valueSize.Y));
 
-						//			// update offset
-						//			topOffset += Math.Max(labelSize.Y, valueSize.Y);
-						//		}
-						//	}
-						//}
+								// draw table row
+								Color lineColor = Color.Gray;
+								contentBatch.DrawLine(x + leftOffset, y + topOffset, new Vector2(rowSize.X, tableBorderWidth), lineColor); // top
+								contentBatch.DrawLine(x + leftOffset, y + topOffset + rowSize.Y, new Vector2(rowSize.X, tableBorderWidth), lineColor); // bottom
+								contentBatch.DrawLine(x + leftOffset, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // left
+								contentBatch.DrawLine(x + leftOffset + labelWidth + cellPadding * 2, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // middle
+								contentBatch.DrawLine(x + leftOffset + rowSize.X, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // right
+
+								// update offset
+								topOffset += Math.Max(labelSize.Y, valueSize.Y);
+							}
+
+							// draw spacer
+							topOffset += lineHeight;
+						}
 
 						// update max scroll
 						this.MaxScroll = Math.Max(0, (int)(topOffset - contentHeight + this.CurrentScroll));

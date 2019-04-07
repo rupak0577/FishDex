@@ -37,6 +37,7 @@ namespace FishDex
 			helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
 			helper.Events.GameLoop.SaveLoaded += this.OnSaveLoaded;
 			helper.Events.Input.ButtonPressed += this.OnButtonPressed;
+			helper.Events.Player.InventoryChanged += this.OnInventoryChanged;
 		}
 
 		/*********
@@ -60,6 +61,24 @@ namespace FishDex
 		private void OnSaveLoaded(object sender, SaveLoadedEventArgs e)
 		{
 			this.Parser.SetCaughtData();
+		}
+
+		/// <summary>The method invoked when the local player's inventory changes.</summary>
+		/// <param name="sender">The event sender.</param>
+		/// <param name="e">The event data.</param>
+		private void OnInventoryChanged(object sender, InventoryChangedEventArgs e)
+		{
+			if (e.IsLocalPlayer)
+			{
+				foreach (var item in e.Added.Where(p => p.Category == -4))
+				{
+					foreach (var fish in Parser.GetFishData().Where(p => !p.Caught && p.Name == item.Name))
+					{
+						Game1.addHUDMessage(new HUDMessage($"{fish.Name}'s data has been added to the Dex", 2));
+						fish.Caught = true;
+					}
+				}
+			}
 		}
 
 		/// <summary>The method invoked when the player presses a button.</summary>

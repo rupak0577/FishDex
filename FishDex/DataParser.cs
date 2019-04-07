@@ -26,7 +26,7 @@ namespace FishDex
 			{
 				// parse fish info
 				string[] fields = fish.Value.Split('/');
-				if (fields[1] == "trap")
+				if (fields[1] == "trap" || fields[0] == "Seaweed" || fields[0] == "Green Algae" || fields[0] == "White Algae")
 					continue;
 
 				char[] temp = fields[5].ToCharArray();

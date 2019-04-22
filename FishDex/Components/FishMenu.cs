@@ -34,6 +34,9 @@ namespace FishDex.Components
 		/// <summary>The amount to scroll long content on each up/down scroll.</summary>
 		private readonly int ScrollAmount;
 
+		/// <summary>Whether to show all the fishes.</summary>
+		private readonly bool ShowAll;
+
 		/// <summary>The clickable 'scroll up' icon.</summary>
 		private readonly ClickableTextureComponent ScrollUpButton;
 
@@ -61,13 +64,15 @@ namespace FishDex.Components
 		/// <param name="monitor">Encapsulates logging and monitoring.</param>
 		/// <param name="reflectionHelper">Simplifies access to private game code.</param>
 		/// <param name="scroll">The amount to scroll long content on each up/down scroll.</param>
-		public FishMenu(DataParser parser, IMonitor monitor, IReflectionHelper reflectionHelper, int scroll)
+		/// <param name="showAll">Whether to show all the fishes.</param>
+		public FishMenu(DataParser parser, IMonitor monitor, IReflectionHelper reflectionHelper, int scroll, bool showAll)
 		{
 			// save data
 			this.Fishes = parser.GetFishData();
 			this.Monitor = monitor;
 			this.Reflection = reflectionHelper;
 			this.ScrollAmount = scroll;
+			this.ShowAll = showAll;
 
 			// add scroll buttons
 			this.ScrollUpButton = new ClickableTextureComponent(Rectangle.Empty, Sprites.Icons.Sheet, Sprites.Icons.UpArrow, 1);
@@ -244,13 +249,13 @@ namespace FishDex.Components
 							// draw sprite
 							{
 								Item item = new SObject(fish.Id, 1);
-								item.drawInMenu(contentBatch, new Vector2(x + leftOffset, y + topOffset), 1f, 1f, 1f, false, fish.Caught ? Color.White : Color.Black * 0.2f, false);
+								item.drawInMenu(contentBatch, new Vector2(x + leftOffset, y + topOffset), 1f, 1f, 1f, false, this.ShowAll || fish.Caught ? Color.White : Color.Black * 0.2f, false);
 								topOffset += Game1.tileSize / 2 + spaceWidth;
 							}
 
 							// draw name
 							{
-								Vector2 nameSize = contentBatch.DrawTextBlock(font, $"{(fish.Caught? fish.Name : "???")}", new Vector2(x + leftOffset + Game1.tileSize + spaceWidth, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+								Vector2 nameSize = contentBatch.DrawTextBlock(font, $"{(this.ShowAll || fish.Caught ? fish.Name : "???")}", new Vector2(x + leftOffset + Game1.tileSize + spaceWidth, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
 								topOffset += Game1.tileSize / 2 + spaceWidth;
 							}
 
@@ -264,7 +269,7 @@ namespace FishDex.Components
 								// draw label & value
 								Vector2 labelSize = contentBatch.DrawTextBlock(font, key, new Vector2(x + leftOffset + cellPadding, y + topOffset + cellPadding), wrapWidth);
 								Vector2 valuePosition = new Vector2(x + leftOffset + labelWidth + cellPadding * 3, y + topOffset + cellPadding);
-								Vector2 valueSize = contentBatch.DrawTextBlock(font, fish.Caught? fish.Data[key] : "???", valuePosition, valueWidth);
+								Vector2 valueSize = contentBatch.DrawTextBlock(font, this.ShowAll || fish.Caught ? fish.Data[key] : "???", valuePosition, valueWidth);
 								Vector2 rowSize = new Vector2(labelWidth + valueWidth + cellPadding * 4, Math.Max(labelSize.Y, valueSize.Y));
 
 								// draw table row

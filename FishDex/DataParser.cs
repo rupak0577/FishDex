@@ -85,7 +85,7 @@ namespace FishDex
 		/// <summary>A fish entry parsed from the game's data files.</summary>
 		internal class FishInfo
 		{
-			public static string[] LABELS = { "Time of Day", "Locations", "Season", "Weather" };
+			private string[] LABELS = { "Time of Day", "Locations", "Season", "Weather" };
 
 			/*********
 			** Accessors
@@ -125,6 +125,26 @@ namespace FishDex
 					{ LABELS[2], season },
 					{ LABELS[3], weather }
 				};
+			}
+
+			public String GetTod()
+			{
+				return this.Data[LABELS[0]];
+			}
+
+			public String GetLocation()
+			{
+				return this.Data[LABELS[1]];
+			}
+
+			public String GetSeason()
+			{
+				return this.Data[LABELS[2]];
+			}
+
+			public String GetWeather()
+			{
+				return this.Data[LABELS[3]];
 			}
 		}
 	}

@@ -52,6 +52,10 @@ namespace FishDex.Components
 		/// <summary>The number of pixels to scroll.</summary>
 		private int CurrentScroll;
 
+		private List<ClickableTextureComponent> ClickableFishTextures = new List<ClickableTextureComponent>();
+
+		private String hoverText = "";
+
 
 		/*********
         ** Public methods
@@ -178,6 +182,21 @@ namespace FishDex.Components
 				this.ScrollDown();
 		}
 
+		public override void performHoverAction(int x, int y)
+		{
+			this.hoverText = "";
+			foreach (ClickableTextureComponent textureComponent in this.ClickableFishTextures)
+			{
+				if (textureComponent.containsPoint(x, y) && this.CurrentScroll == 0)
+				{
+					textureComponent.scale = Math.Min(textureComponent.scale + 0.02f, textureComponent.baseScale + 0.1f);
+					this.hoverText = CreateHoverText(textureComponent.name);
+				}
+				else
+					textureComponent.scale = Math.Max(textureComponent.scale - 0.02f, textureComponent.baseScale);
+			}
+		}
+
 		/// <summary>Render the UI.</summary>
 		/// <param name="spriteBatch">The sprite batch being drawn.</param>
 		public override void draw(SpriteBatch spriteBatch)
@@ -240,7 +259,36 @@ namespace FishDex.Components
 
 							Vector2 caughtLabelSize = contentBatch.DrawTextBlock(font, $"Caught : ", new Vector2(x + leftOffset, y + topOffset), wrapWidth);
 							Vector2 caughtValueSize = contentBatch.DrawTextBlock(font, $"{caught}/{this.Fishes.Count()}", new Vector2(x + leftOffset + caughtLabelSize.X, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
-							topOffset += lineHeight * 4;
+							topOffset += lineHeight;
+						}
+
+						{
+							Vector2 catchableLabelSize = contentBatch.DrawTextBlock(font, $"Catchable now : ", new Vector2(x + leftOffset, y + topOffset), wrapWidth);
+
+							float rowWidth = wrapWidth - catchableLabelSize.X;
+							int fishPerRow = (int) (rowWidth / ((Game1.tileSize / 2) + 8));
+
+							float innerOffset = (Game1.tileSize / 2 ) + 8;
+							float innerTopOffset = 0;
+
+							int count = 0;
+
+							foreach (var fish in GetFishesCurrentlyCatchable())
+							{
+								int xPos = (int) (x + leftOffset + catchableLabelSize.X + (innerOffset * count));
+								int yPos = (int) (y + topOffset + innerTopOffset);
+								ClickableTextureComponent textureComponent = new ClickableTextureComponent(fish.Name + "*" + fish.GetTod() + "*" + fish.GetLocation(), new Rectangle(xPos, yPos, Game1.tileSize/2, Game1.tileSize/2), (string)null, "", Game1.objectSpriteSheet, Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, fish.Id, 16, 16), 2f, true);
+								this.ClickableFishTextures.Add(textureComponent);
+								textureComponent.draw(contentBatch, Color.White, 0.86f);
+
+								count++;
+								if (count == fishPerRow)
+								{
+									count = 0;
+									innerTopOffset += (Game1.tileSize / 2) + 8;
+								}
+							}
+							topOffset += innerTopOffset + (lineHeight * 2);
 						}
 
 						// draw fish info
@@ -308,13 +356,57 @@ namespace FishDex.Components
 
 				// draw cursor
 				this.drawMouse(Game1.spriteBatch);
+
+				if (!this.hoverText.Equals(""))
+				{
+					IClickableMenu.drawHoverText(spriteBatch, this.hoverText, Game1.smallFont, 0, 0, -1, (string)null, -1, (string[])null, (Item)null, 0, -1, -1, -1, -1, 1f, (CraftingRecipe)null);
+				}
 			}, this.OnDrawError);
 		}
-
 
 		/*********
         ** Private methods
         *********/
+
+		private IEnumerable<FishInfo> GetFishesCurrentlyCatchable()
+		{
+			String season = Game1.currentSeason;
+			String weather = Game1.isRaining ? "rainy" : "sunny";
+			int currentTime = Game1.timeOfDay;
+
+			string[] delimiter = new string[] { " | " };
+
+			foreach (var fish in this.Fishes)
+			{
+				if (fish.Caught || this.ShowAll)
+				{
+					String[] seasons = fish.GetSeason().Split(delimiter, StringSplitOptions.None);
+					if (!seasons.Contains(season) || !fish.GetWeather().Contains(weather))
+						continue;
+
+					String[] tod = fish.GetTod().Split(delimiter, StringSplitOptions.None);
+					foreach (var time in tod)
+					{
+						String[] timeStrings = time.Split('-');
+						int t1 = Int32.Parse(timeStrings[0]);
+						int t2 = Int32.Parse(timeStrings[1]);
+
+						if (currentTime >= t1 && currentTime < t2)
+							yield return fish;
+					}
+				}
+			}
+		}
+
+		private string CreateHoverText(string name)
+		{
+			string[] fishInfo = name.Split('*');
+			string str = fishInfo[0] + Environment.NewLine + Environment.NewLine;
+
+			str += "Time : " + fishInfo[1] + Environment.NewLine + "Location : " + fishInfo[2];
+			return str;
+		}
+
 		/// <summary>Update the layout dimensions based on the current game scale.</summary>
 		private void UpdateLayout()
 		{

@@ -50,10 +50,19 @@ namespace FishDex
 						locations.Append(" | ");
 					}
 				}
-				if (locations.Length == 0)
+				if (fish.Key == 158) // stonefish
+					locations.Append("Mines, Level 20 | ");
+				else if (fish.Key == 161) // ice pip
+					locations.Append("Mines, Level 60 | ");
+				else if (fish.Key == 162) // lava eel
+					locations.Append("Mines, Level 100 | ");
+				else if (fish.Key == 798 || fish.Key == 799 || fish.Key == 800) // midnight squid, spookfish, blobfish
+					locations.Append("Submarine at Night Market | ");
+
+				if (locations.Length == 0) // location field still empty => legendary fishes
 					locations.Append("-");
 				else
-					locations.Length -= 3;
+					locations.Length -= 3; // exclude the last " | " separator
 
 				// add fish info object
 				Fishes.Add(new FishInfo(fish.Key, fields[0], false, tod, locations.ToString(), fields[6].Replace(" ", " | "), 

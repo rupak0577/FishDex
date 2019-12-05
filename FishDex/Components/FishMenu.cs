@@ -297,7 +297,7 @@ namespace FishDex.Components
 							// draw sprite
 							{
 								Item item = new SObject(fish.Id, 1);
-								item.drawInMenu(contentBatch, new Vector2(x + leftOffset, y + topOffset), 1f, 1f, 1f, false, this.ShowAll || fish.Caught ? Color.White : Color.Black * 0.2f, false);
+								item.drawInMenu(contentBatch, new Vector2(x + leftOffset, y + topOffset), 1f, 1f, 1f, StackDrawType.Hide, this.ShowAll || fish.Caught ? Color.White : Color.Black * 0.2f, false);
 								topOffset += Game1.tileSize / 2 + spaceWidth;
 							}
 

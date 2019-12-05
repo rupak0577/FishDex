@@ -380,6 +380,11 @@ namespace FishDex.Components
 			{
 				if (fish.Caught || this.ShowAll)
 				{
+					// Exclude legendaries if already caught
+					if (fish.Caught && (fish.Id == 159 || fish.Id == 160 || fish.Id == 163 || 
+						fish.Id == 775 || fish.Id == 682))
+						continue;
+
 					String[] seasons = fish.GetSeason().Split(delimiter, StringSplitOptions.None);
 					if (!seasons.Contains(season) || !fish.GetWeather().Contains(weather))
 						continue;

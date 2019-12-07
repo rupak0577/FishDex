@@ -72,7 +72,7 @@ namespace FishDex.Components
 		public FishMenu(DataParser parser, IMonitor monitor, IReflectionHelper reflectionHelper, int scroll, bool showAll)
 		{
 			// save data
-			this.Fishes = parser.GetFishData();
+			this.Fishes = parser.GetFishData().OrderBy(s => s.Name);
 			this.Monitor = monitor;
 			this.Reflection = reflectionHelper;
 			this.ScrollAmount = scroll;
@@ -249,6 +249,8 @@ namespace FishDex.Components
 						leftOffset += 72;
 						float wrapWidth = this.width - leftOffset - gutter;
 
+						float caughtTextSize = 0;
+						topOffset += lineHeight;
 						{
 							int caught = 0;
 							foreach (var fish in this.Fishes)
@@ -259,13 +261,14 @@ namespace FishDex.Components
 
 							Vector2 caughtLabelSize = contentBatch.DrawTextBlock(font, $"Caught : ", new Vector2(x + leftOffset, y + topOffset), wrapWidth);
 							Vector2 caughtValueSize = contentBatch.DrawTextBlock(font, $"{caught}/{this.Fishes.Count()}", new Vector2(x + leftOffset + caughtLabelSize.X, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+							caughtTextSize = caughtLabelSize.X + caughtValueSize.X;
 							topOffset += lineHeight;
 						}
 
 						{
-							Vector2 catchableLabelSize = contentBatch.DrawTextBlock(font, $"Catchable now : ", new Vector2(x + leftOffset, y + topOffset), wrapWidth);
+							Vector2 catchableLabelSize = contentBatch.DrawTextBlock(font, $"Catchable now : ", new Vector2(x + leftOffset + caughtTextSize + leftOffset, y + topOffset - lineHeight), wrapWidth);
 
-							float rowWidth = wrapWidth - catchableLabelSize.X;
+							float rowWidth = wrapWidth - catchableLabelSize.X - caughtTextSize - leftOffset;
 							int fishPerRow = (int) (rowWidth / ((Game1.tileSize / 2) + 8));
 
 							float innerOffset = (Game1.tileSize / 2 ) + 8;
@@ -275,8 +278,8 @@ namespace FishDex.Components
 
 							foreach (var fish in GetFishesCurrentlyCatchable())
 							{
-								int xPos = (int) (x + leftOffset + catchableLabelSize.X + (innerOffset * count));
-								int yPos = (int) (y + topOffset + innerTopOffset);
+								int xPos = (int) (x + leftOffset + caughtTextSize + leftOffset + catchableLabelSize.X + (innerOffset * count));
+								int yPos = (int) (y + topOffset - lineHeight + innerTopOffset);
 								ClickableTextureComponent textureComponent = new ClickableTextureComponent(fish.Name + "*" + fish.GetTod() + "*" + fish.GetLocation(), new Rectangle(xPos, yPos, Game1.tileSize/2, Game1.tileSize/2), (string)null, "", Game1.objectSpriteSheet, Game1.getSourceRectForStandardTileSheet(Game1.objectSpriteSheet, fish.Id, 16, 16), 2f, true);
 								this.ClickableFishTextures.Add(textureComponent);
 								textureComponent.draw(contentBatch, Color.White, 0.86f);
@@ -291,19 +294,21 @@ namespace FishDex.Components
 							topOffset += innerTopOffset + (lineHeight * 2);
 						}
 
+						float column1RowHeight = 0, column2Offset = 0, rowOffset = topOffset;
+
 						// draw fish info
 						foreach (FishInfo fish in this.Fishes)
 						{
 							// draw sprite
 							{
 								Item item = new SObject(fish.Id, 1);
-								item.drawInMenu(contentBatch, new Vector2(x + leftOffset, y + topOffset), 1f, 1f, 1f, StackDrawType.Hide, this.ShowAll || fish.Caught ? Color.White : Color.Black * 0.2f, false);
+								item.drawInMenu(contentBatch, new Vector2(x + leftOffset + column2Offset, y + topOffset), 1f, 1f, 1f, StackDrawType.Hide, this.ShowAll || fish.Caught ? Color.White : Color.Black * 0.2f, false);
 								topOffset += Game1.tileSize / 2 + spaceWidth;
 							}
 
 							// draw name
 							{
-								Vector2 nameSize = contentBatch.DrawTextBlock(font, $"{(this.ShowAll || fish.Caught ? fish.Name : "???")}", new Vector2(x + leftOffset + Game1.tileSize + spaceWidth, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+								Vector2 nameSize = contentBatch.DrawTextBlock(font, $"{(this.ShowAll || fish.Caught ? fish.Name : "???")}", new Vector2(x + leftOffset + column2Offset + Game1.tileSize + spaceWidth, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
 								topOffset += Game1.tileSize / 2 + spaceWidth;
 							}
 
@@ -312,28 +317,44 @@ namespace FishDex.Components
 							{
 								float cellPadding = 3;
 								float labelWidth = fish.Data.Keys.Max(p => font.MeasureString(p).X);
-								float valueWidth = wrapWidth - labelWidth - cellPadding * 4 - tableBorderWidth;
+								float valueWidth = wrapWidth / 2.2F - labelWidth - cellPadding * 4 - tableBorderWidth;
 
 								// draw label & value
-								Vector2 labelSize = contentBatch.DrawTextBlock(font, key, new Vector2(x + leftOffset + cellPadding, y + topOffset + cellPadding), wrapWidth);
-								Vector2 valuePosition = new Vector2(x + leftOffset + labelWidth + cellPadding * 3, y + topOffset + cellPadding);
+								Vector2 labelSize = contentBatch.DrawTextBlock(font, key, new Vector2(x + leftOffset + cellPadding + column2Offset, y + topOffset + cellPadding), wrapWidth);
+								Vector2 valuePosition = new Vector2(x + leftOffset + labelWidth + cellPadding * 3 + column2Offset, y + topOffset + cellPadding);
 								Vector2 valueSize = contentBatch.DrawTextBlock(font, this.ShowAll || fish.Caught ? fish.Data[key] : "???", valuePosition, valueWidth);
 								Vector2 rowSize = new Vector2(labelWidth + valueWidth + cellPadding * 4, Math.Max(labelSize.Y, valueSize.Y));
 
 								// draw table row
 								Color lineColor = Color.Gray;
-								contentBatch.DrawLine(x + leftOffset, y + topOffset, new Vector2(rowSize.X, tableBorderWidth), lineColor); // top
-								contentBatch.DrawLine(x + leftOffset, y + topOffset + rowSize.Y, new Vector2(rowSize.X, tableBorderWidth), lineColor); // bottom
-								contentBatch.DrawLine(x + leftOffset, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // left
-								contentBatch.DrawLine(x + leftOffset + labelWidth + cellPadding * 2, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // middle
-								contentBatch.DrawLine(x + leftOffset + rowSize.X, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // right
+								contentBatch.DrawLine(x + leftOffset + column2Offset, y + topOffset, new Vector2(rowSize.X, tableBorderWidth), lineColor); // top
+								contentBatch.DrawLine(x + leftOffset + column2Offset, y + topOffset + rowSize.Y, new Vector2(rowSize.X, tableBorderWidth), lineColor); // bottom
+								contentBatch.DrawLine(x + leftOffset + column2Offset, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // left
+								contentBatch.DrawLine(x + leftOffset + column2Offset + labelWidth + cellPadding * 2, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // middle
+								contentBatch.DrawLine(x + leftOffset + column2Offset + rowSize.X, y + topOffset, new Vector2(tableBorderWidth, rowSize.Y), lineColor); // right
 
 								// update offset
 								topOffset += Math.Max(labelSize.Y, valueSize.Y);
 							}
 
-							// draw spacer
-							topOffset += lineHeight;
+							if (column2Offset == 0)
+							{
+								column2Offset += (wrapWidth / 2.2F - tableBorderWidth) + leftOffset / 2;
+								column1RowHeight = topOffset + lineHeight;
+								topOffset = rowOffset; // Reset topOffset
+							}
+							else
+							{
+								column2Offset = 0;
+
+								// draw spacer
+								topOffset += lineHeight;
+
+								// Take max of column1 and column2 heights
+								rowOffset = Math.Max(column1RowHeight, topOffset);
+								// Move to next row
+								topOffset = rowOffset;
+							}
 						}
 
 						// update max scroll
@@ -416,7 +437,7 @@ namespace FishDex.Components
 		private void UpdateLayout()
 		{
 			// update size
-			this.width = Math.Min(Game1.tileSize * 14, Game1.viewport.Width);
+			this.width = Math.Min(Game1.tileSize * 18, Game1.viewport.Width);
 			this.height = Math.Min((int)(this.AspectRatio.Y / this.AspectRatio.X * this.width), Game1.viewport.Height);
 
 			// update position

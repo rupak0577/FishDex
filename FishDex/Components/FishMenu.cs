@@ -37,11 +37,11 @@ namespace FishDex.Components
 		/// <summary>Whether to show all the fishes.</summary>
 		private readonly bool ShowAll;
 
-		/// <summary>The clickable 'scroll up' icon.</summary>
-		private readonly ClickableTextureComponent ScrollUpButton;
+		/// <summary>The clickable 'scroll to top' icon.</summary>
+		private readonly ClickableTextureComponent ScrollToTopButton;
 
-		/// <summary>The clickable 'scroll down' icon.</summary>
-		private readonly ClickableTextureComponent ScrollDownButton;
+		/// <summary>The clickable 'scroll to bottom' icon.</summary>
+		private readonly ClickableTextureComponent ScrollToBottomButton;
 
 		/// <summary>The spacing around the scroll buttons.</summary>
 		private readonly int ScrollButtonGutter = 15;
@@ -79,8 +79,8 @@ namespace FishDex.Components
 			this.ShowAll = showAll;
 
 			// add scroll buttons
-			this.ScrollUpButton = new ClickableTextureComponent(Rectangle.Empty, Sprites.Icons.Sheet, Sprites.Icons.UpArrow, 1);
-			this.ScrollDownButton = new ClickableTextureComponent(Rectangle.Empty, Sprites.Icons.Sheet, Sprites.Icons.DownArrow, 1);
+			this.ScrollToTopButton = new ClickableTextureComponent(Rectangle.Empty, Sprites.Icons.Sheet, Sprites.Icons.UpArrow, 1);
+			this.ScrollToBottomButton = new ClickableTextureComponent(Rectangle.Empty, Sprites.Icons.Sheet, Sprites.Icons.DownArrow, 1);
 
 			// update layout
 			this.UpdateLayout();
@@ -176,10 +176,20 @@ namespace FishDex.Components
 				this.exitThisMenu();
 
 			// scroll up or down
-			else if (this.ScrollUpButton.containsPoint(x, y))
-				this.ScrollUp();
-			else if (this.ScrollDownButton.containsPoint(x, y))
-				this.ScrollDown();
+			else if (this.ScrollToTopButton.containsPoint(x, y))
+				this.ScrollToTop();
+			else if (this.ScrollToBottomButton.containsPoint(x, y))
+				this.ScrollToBottom();
+		}
+
+		private void ScrollToBottom()
+		{
+			this.CurrentScroll = int.MaxValue;
+		}
+
+		private void ScrollToTop()
+		{
+			this.CurrentScroll = 0;
 		}
 
 		public override void performHoverAction(int x, int y)
@@ -362,9 +372,9 @@ namespace FishDex.Components
 
 						// draw scroll icons
 						if (this.MaxScroll > 0 && this.CurrentScroll > 0)
-							this.ScrollUpButton.draw(contentBatch);
+							this.ScrollToTopButton.draw(contentBatch);
 						if (this.MaxScroll > 0 && this.CurrentScroll < this.MaxScroll)
-							this.ScrollDownButton.draw(spriteBatch);
+							this.ScrollToBottomButton.draw(spriteBatch);
 
 						// end draw
 						contentBatch.End();
@@ -450,8 +460,8 @@ namespace FishDex.Components
 			int y = this.yPositionOnScreen;
 			int gutter = this.ScrollButtonGutter;
 			float contentHeight = this.height - gutter * 2;
-			this.ScrollUpButton.bounds = new Rectangle(x + gutter, (int)(y + contentHeight - Sprites.Icons.UpArrow.Height - gutter - Sprites.Icons.DownArrow.Height), Sprites.Icons.UpArrow.Height, Sprites.Icons.UpArrow.Width);
-			this.ScrollDownButton.bounds = new Rectangle(x + gutter, (int)(y + contentHeight - Sprites.Icons.DownArrow.Height), Sprites.Icons.DownArrow.Height, Sprites.Icons.DownArrow.Width);
+			this.ScrollToTopButton.bounds = new Rectangle(x + width - (gutter * 4), (int)(y + (contentHeight / 2) - Sprites.Icons.UpArrow.Height - gutter - Sprites.Icons.DownArrow.Height), Sprites.Icons.UpArrow.Height, Sprites.Icons.UpArrow.Width);
+			this.ScrollToBottomButton.bounds = new Rectangle(x + width - (gutter * 4), (int)(y + (contentHeight / 2) - Sprites.Icons.DownArrow.Height), Sprites.Icons.DownArrow.Height, Sprites.Icons.DownArrow.Width);
 		}
 
 		/// <summary>The method invoked when an unhandled exception is intercepted.</summary>

@@ -262,16 +262,27 @@ namespace FishDex.Components
 						float caughtTextSize = 0;
 						topOffset += lineHeight;
 						{
-							int caught = 0;
-							foreach (var fish in this.Fishes)
+							Vector2 caughtLabelSize = contentBatch.DrawTextBlock(font, $"Caught : ", new Vector2(x + leftOffset, y + topOffset), wrapWidth);
+							Vector2 caughtValueSize = contentBatch.DrawTextBlock(font, $"{this.Fishes.Count(fish => fish.Caught)}/{this.Fishes.Count()}", new Vector2(x + leftOffset + caughtLabelSize.X, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+							caughtTextSize = caughtLabelSize.X + caughtValueSize.X;
+						}
+
+						{
+							int caught = 0, total = 0;
+
+							foreach(var fish in this.Fishes)
 							{
-								if (fish.Caught)
-									caught++;
+								if ((fish.Id == 159 || fish.Id == 160 || fish.Id == 163 || fish.Id == 775 || fish.Id == 682))
+								{
+									if (fish.Caught)
+										caught++;
+									total++;
+								}
 							}
 
-							Vector2 caughtLabelSize = contentBatch.DrawTextBlock(font, $"Caught : ", new Vector2(x + leftOffset, y + topOffset), wrapWidth);
-							Vector2 caughtValueSize = contentBatch.DrawTextBlock(font, $"{caught}/{this.Fishes.Count()}", new Vector2(x + leftOffset + caughtLabelSize.X, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
-							caughtTextSize = caughtLabelSize.X + caughtValueSize.X;
+							Vector2 legendariesCaughtLabelSize = contentBatch.DrawTextBlock(font, $"Legendaries : ", new Vector2(x + leftOffset, y + topOffset + lineHeight), wrapWidth);
+							Vector2 legendariesCaughtValueSize = contentBatch.DrawTextBlock(font, $"{caught}/{total}", new Vector2(x + leftOffset + legendariesCaughtLabelSize.X, y + topOffset + lineHeight), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+							caughtTextSize = legendariesCaughtLabelSize.X + legendariesCaughtValueSize.X;
 							topOffset += lineHeight;
 						}
 

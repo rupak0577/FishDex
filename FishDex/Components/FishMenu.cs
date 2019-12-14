@@ -256,7 +256,7 @@ namespace FishDex.Components
 						this.CurrentScroll = Math.Min(this.MaxScroll, this.CurrentScroll); // don't scroll past bottom
 						topOffset -= this.CurrentScroll; // scrolled down == move text up
 
-						leftOffset += 72;
+						leftOffset += 36;
 						float wrapWidth = this.width - leftOffset - gutter;
 
 						float caughtTextSize = 0;
@@ -383,7 +383,7 @@ namespace FishDex.Components
 
 						// draw scroll icons
 						if (this.MaxScroll > 0 && this.CurrentScroll > 0)
-							this.ScrollToTopButton.draw(contentBatch);
+							this.ScrollToTopButton.draw(spriteBatch);
 						if (this.MaxScroll > 0 && this.CurrentScroll < this.MaxScroll)
 							this.ScrollToBottomButton.draw(spriteBatch);
 
@@ -458,7 +458,7 @@ namespace FishDex.Components
 		private void UpdateLayout()
 		{
 			// update size
-			this.width = Math.Min(Game1.tileSize * 18, Game1.viewport.Width);
+			this.width = Math.Min(Game1.tileSize * 14, Game1.viewport.Width);
 			this.height = Math.Min((int)(this.AspectRatio.Y / this.AspectRatio.X * this.width), Game1.viewport.Height);
 
 			// update position
@@ -471,8 +471,8 @@ namespace FishDex.Components
 			int y = this.yPositionOnScreen;
 			int gutter = this.ScrollButtonGutter;
 			float contentHeight = this.height - gutter * 2;
-			this.ScrollToTopButton.bounds = new Rectangle(x + width - (gutter * 4), (int)(y + (contentHeight / 2) - Sprites.Icons.UpArrow.Height - gutter - Sprites.Icons.DownArrow.Height), Sprites.Icons.UpArrow.Height, Sprites.Icons.UpArrow.Width);
-			this.ScrollToBottomButton.bounds = new Rectangle(x + width - (gutter * 4), (int)(y + (contentHeight / 2) - Sprites.Icons.DownArrow.Height), Sprites.Icons.DownArrow.Height, Sprites.Icons.DownArrow.Width);
+			this.ScrollToTopButton.bounds = new Rectangle(x + width - (gutter * 4), (int)(y + contentHeight - Sprites.Icons.UpArrow.Height - gutter - Sprites.Icons.DownArrow.Height), Sprites.Icons.UpArrow.Height, Sprites.Icons.UpArrow.Width);
+			this.ScrollToBottomButton.bounds = new Rectangle(x + width - (gutter * 4), (int)(y + contentHeight - Sprites.Icons.DownArrow.Height), Sprites.Icons.DownArrow.Height, Sprites.Icons.DownArrow.Width);
 		}
 
 		/// <summary>The method invoked when an unhandled exception is intercepted.</summary>

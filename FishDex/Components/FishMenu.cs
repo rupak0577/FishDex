@@ -427,8 +427,12 @@ namespace FishDex.Components
 						fish.Id == 775 || fish.Id == 682))
 						continue;
 
+					// Exclude fishes that cannot be caught in the current season and/or weather
 					String[] seasons = fish.GetSeason().Split(delimiter, StringSplitOptions.None);
-					if (!seasons.Contains(season) || !fish.GetWeather().Contains(weather))
+					if (!seasons.Contains("all") && !seasons.Contains(season))
+						continue;
+
+					if (!fish.GetWeather().Contains("both") && !fish.GetWeather().Contains(weather))
 						continue;
 
 					String[] tod = fish.GetTod().Split(delimiter, StringSplitOptions.None);

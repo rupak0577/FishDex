@@ -330,6 +330,15 @@ namespace FishDex.Components
 							// draw name
 							{
 								Vector2 nameSize = contentBatch.DrawTextBlock(font, $"{(this.ShowAll || fish.Caught ? fish.Name : "???")}", new Vector2(x + leftOffset + column2Offset + Game1.tileSize + spaceWidth, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+
+								// draw caught status for legendary fishes
+								{
+									if ((fish.Caught && (fish.Id == 159 || fish.Id == 160 || fish.Id == 163 || fish.Id == 682 || fish.Id == 775)))
+									{
+										contentBatch.DrawTextBlock(font, "(X)", new Vector2(x + leftOffset + column2Offset + Game1.tileSize + spaceWidth + nameSize.X + spaceWidth, y + topOffset), wrapWidth, bold: Game1.content.GetCurrentLanguage() != LocalizedContentManager.LanguageCode.zh);
+									}
+								}
+
 								topOffset += Game1.tileSize / 2 + spaceWidth;
 							}
 
